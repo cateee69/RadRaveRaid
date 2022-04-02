@@ -13,7 +13,7 @@ config = configdata["BotConfig"]
 
 tokens = open('tokens.txt','r').read().splitlines()
 proxies = open('proxies.txt','r').read().splitlines()
-proxies = [{'https':'http://'+proxy} for proxy in proxies]
+proxies = [{'https': f'http://{proxy}'} for proxy in proxies]
 
 executor = ThreadPoolExecutor(max_workers=config["threadcap"])
 
@@ -57,51 +57,47 @@ def Scrape():
     print(f"[{Fore.GREEN}+{Fore.RESET}] Scraping proxies...")
     try:
         res = requests.get('https://api.proxyscrape.com/?request=displayproxies&proxytype=http&timeout=1500')
-        file = open("proxies.txt", "a+")
-        file.seek(0)
-        file.truncate()
-        proxies = []
-        for proxy in res.text.split('\n'):
-            proxy = proxy.strip()
-            if proxy:
-                proxies.append(proxy)
-        for p in proxies:
-            file.write((p)+"\n")
-        file.close()
+        with open("proxies.txt", "a+") as file:
+            file.seek(0)
+            file.truncate()
+            proxies = []
+            for proxy in res.text.split('\n'):
+                if proxy := proxy.strip():
+                    proxies.append(proxy)
+            for p in proxies:
+                file.write((p)+"\n")
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def Join(invite):
     try:
         print(f"[{Fore.GREEN}+{Fore.RESET}] Joining...")
         inv = invite.replace("https://discord.gg/","")
-        if config["useproxy"] == True:
-            for tok in tokens:
+        for tok in tokens:
+            if config["useproxy"] == True:
                 proxy = random.choice(proxies)
                 r = req.post(f'https://discord.com/api/v9/invites/{inv}', headers = {'Authorization': tok}, proxies = proxy)
-        else:
-            for tok in tokens:
+            else:
                 r = req.post(f'https://discord.com/api/v9/invites/{inv}', headers = {'Authorization': tok})
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def Leave(serverid):
     try:
         print(f"[{Fore.GREEN}+{Fore.RESET}] Leaving...")
-        if config["useproxy"] == True:
-            for tok in tokens:
+        for tok in tokens:
+            if config["useproxy"] == True:
                 proxy = random.choice(proxies)
                 r = req.delete(f'https://discord.com/api/v9/users/@me/guilds/{serverid}', headers = {'Authorization': tok}, proxies = proxy)
-        else:
-            for tok in tokens:
+            else:
                 r = req.delete(f'https://discord.com/api/v9/users/@me/guilds/{serverid}', headers = {'Authorization': tok})
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def Friend(target):
@@ -110,81 +106,101 @@ def Friend(target):
         tartag = target.split('#')
         name = tartag[0]
         discrim = tartag[1]
-        if config["useproxy"] == True:
-            for tok in tokens:
+        for tok in tokens:
+            if config["useproxy"] == True:
                 proxy = random.choice(proxies)
-                r = req.post(f'https://discordapp.com/api/v9/users/@me/relationships', headers = {'Authorization': tok}, json = {'username':name,'discriminator':discrim}, proxies = proxy)
-        else:
-            for tok in tokens:
+                r = req.post(
+                    'https://discordapp.com/api/v9/users/@me/relationships',
+                    headers={'Authorization': tok},
+                    json={'username': name, 'discriminator': discrim},
+                    proxies=proxy,
+                )
+
+            else:
                 proxy = random.choice(proxies)
-                r = req.post(f'https://discordapp.com/api/v9/users/@me/relationships', headers = {'Authorization': tok}, json = {'username':name,'discriminator':discrim})
+                r = req.post(
+                    'https://discordapp.com/api/v9/users/@me/relationships',
+                    headers={'Authorization': tok},
+                    json={'username': name, 'discriminator': discrim},
+                )
+
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def DM(tid,amount,message):
     try:
         print(f"[{Fore.GREEN}+{Fore.RESET}] Spamming...")
-        if config["useproxy"] == True:
-            for _ in range(int(amount)):
-                for tok in tokens:
+        for _ in range(int(amount)):
+            for tok in tokens:
+                if config["useproxy"] == True:
                     proxy = random.choice(proxies)
-                    r = req.post(f'https://discordapp.com/api/v9/users/@me/channels', headers = {'Authorization': tok}, json = {'recipient_id':tid}, proxies = proxy).json()
+                    r = req.post(
+                        'https://discordapp.com/api/v9/users/@me/channels',
+                        headers={'Authorization': tok},
+                        json={'recipient_id': tid},
+                        proxies=proxy,
+                    ).json()
+
                     r2 = req.post(f"https://discordapp.com/api/v9/channels/{r['id']}/messages", headers = {'Authorization': tok}, json = {'content': message,'nonce':'','tts':False}, proxies = proxy)
-        else:
-            for _ in range(int(amount)):
-                for tok in tokens:
-                    r = req.post(f'https://discordapp.com/api/v9/users/@me/channels', headers = {'Authorization': tok}, json = {'recipient_id':tid}).json()
+                else:
+                    r = req.post(
+                        'https://discordapp.com/api/v9/users/@me/channels',
+                        headers={'Authorization': tok},
+                        json={'recipient_id': tid},
+                    ).json()
+
                     r2 = req.post(f"https://discordapp.com/api/v9/channels/{r['id']}/messages", headers = {'Authorization': tok}, json = {'content': message,'nonce':'','tts':False})
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def Spam(channel,amount,message):
     try:
         print(f"[{Fore.GREEN}+{Fore.RESET}] Spamming...")
-        if config["useproxy"] == True:
-            for _ in range(int(amount)):
-                for tok in tokens:
+        for _ in range(int(amount)):
+            for tok in tokens:
+                if config["useproxy"] == True:
                     proxy = random.choice(proxies)
                     r = req.post(f'https://discordapp.com/api/v9/channels/{channel}/messages', headers = {'Authorization': tok}, json = {'content': message,'nonce':'','tts':False}, proxies = proxy)
-        else:
-            for _ in range(int(amount)):
-                for tok in tokens:
+                else:
                     r = req.post(f'https://discordapp.com/api/v9/channels/{channel}/messages', headers = {'Authorization': tok}, json = {'content': message,'nonce':'','tts':False})
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def Check():
     print(f"[{Fore.GREEN}+{Fore.RESET}] Checking...")
     try:
-        file = open("tokens.txt", "w")
-        file.seek(0)
-        file.truncate()
-        working = []
-        if config["useproxy"] == True:
+        with open("tokens.txt", "w") as file:
+            file.seek(0)
+            file.truncate()
+            working = []
             for tok in tokens:
-                proxy = random.choice(proxies)
-                r = req.get(f'https://discord.com/api/v9/users/@me', headers = {'authorization':tok}, proxies = proxy)
+                if config["useproxy"] == True:
+                    proxy = random.choice(proxies)
+                    r = req.get(
+                        'https://discord.com/api/v9/users/@me',
+                        headers={'authorization': tok},
+                        proxies=proxy,
+                    )
+
+                else:
+                    r = req.get(
+                        'https://discord.com/api/v9/users/@me',
+                        headers={'authorization': tok},
+                    )
+
                 if r.status_code == 200:
                     working.append(tok)
             for t in working:
                 file.write((t)+"\n")
-        else:
-            for tok in tokens:
-                r = req.get(f'https://discord.com/api/v9/users/@me', headers = {'authorization':tok})
-                if r.status_code == 200:
-                    working.append(tok)
-            for t in working:
-                file.write((t)+"\n")
-        file.close()
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def StausChange(tok):
@@ -229,7 +245,7 @@ def BringOnline():
             executor.submit(StausChange,tok)
         print(f"[{Fore.GREEN}+{Fore.RESET}] Finished!")
     except Exception as e:
-        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.YELLOW}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
     Start()
 
 def Clear():
@@ -278,4 +294,4 @@ if __name__ == '__main__':
         Setup()
         Start()
     except Exception as e:
-        print(f"{Fore.RED}[ERROR]: {Fore.YELLOW}{e}"+Fore.RESET)
+        print(f"{Fore.RED}[ERROR]: {Fore.YELLOW}{e}{Fore.RESET}")
